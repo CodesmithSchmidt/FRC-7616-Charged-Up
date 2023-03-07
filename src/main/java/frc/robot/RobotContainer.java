@@ -27,12 +27,16 @@ public class RobotContainer {
     private final int rotationAxis = XboxController.Axis.kRightX.value;
 
     /* Driver Buttons */
-    private final JoystickButton zeroGyro = new JoystickButton(driver, XboxController.Button.kY.value);
+    private final JoystickButton zeroGyro = new JoystickButton(driver, XboxController.Button.kStart.value);
     private final JoystickButton robotCentric = new JoystickButton(driver, XboxController.Button.kLeftBumper.value);
 
     /* Subsystems */
     private final Swerve s_Swerve = new Swerve();
+    private final AngleSet a_angleSet = new AngleSet();
+    private final Claw c_claw = new Claw();
+    private final Elevator e_elevator = new Elevator();
 
+    public boolean scoring = false;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -58,7 +62,21 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         /* Driver Buttons */
+        /* Start Button = zero gyro
+         * Left Bumper = robot centric driving
+         * X elevator in (only while angle is at scoring)
+         * B elevator out (only while angle is at scoring)
+         
+         need to make it so angleSet commands can only run if elevator is in, and elevator can only run if in scoring position
+         
+         need 3 angle positions, start, score, pickup.
+
+         */
         zeroGyro.onTrue(new InstantCommand(() -> s_Swerve.zeroGyro()));
+
+        //TODO: Test motor polarity for forward/back and adjust speed variable
+        new JoystickButton(driver, XboxController.Button.kB.value).whileActiveOnce(new ElevatorControl(e_elevator, scoring, .2));
+        new JoystickButton(driver, XboxController.Button.kX.value).whileActiveOnce(new ElevatorControl(e_elevator, scoring, -.2));
     }
 
     /**
