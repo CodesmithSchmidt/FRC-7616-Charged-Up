@@ -1,37 +1,21 @@
 package frc.robot.commands;
 
-import java.util.List;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Swerve;
 
 public class GotoPlatform extends CommandBase {
    // LIST OF WAYPOINTS TO GET TO THE PLATFORM
-   public List<Translation2d> waypoint;
-   public Trajectory finalTrajectory;
-   public Swerve swerve;
-   public TrajectoryConfig config;
+   private Translation2d finalTrajectory;
+   private Swerve swerve;
 
    public GotoPlatform(Swerve swerve_in) {
     // POPULATE TRAJECTORY WAYPOINTS HERE. LOOK AT THE FIELD MAP...
+    // TOOK A LOOK. I THINK WE CAN GET AWAY WITH JUST GOING FORWARD
     swerve = swerve_in;
 
-     // ALL UNITS FOR TRAJECTORIES ARE IN METRES
-     finalTrajectory = TrajectoryGenerator.generateTrajectory(
-        // START POSITION (0, 0) FACING +X
-        new Pose2d(0, 0, new Rotation2d(0)),
-        // LIST OF INTERIOR WAYPOINTS
-        waypoint,
-        // POSITION OF THE PLATFORM
-        new Pose2d(null, null),
-        // CONFIGURATION FOR THE SWERVE DRIVE
-        config);
+   // MAY NEED SOME TWEAKING IF 1 != 1 METRE
+    finalTrajectory = new Translation2d(1, 0);
    } 
 
    public void initialize() {
@@ -39,8 +23,8 @@ public class GotoPlatform extends CommandBase {
    }
 
    public void execute() {
-    // FIGURE OUT HOW TO PASS THE TRAJECTORY TO THE SWERVE
-
+    // FIGURE OUT HOW TO PASS THE TRANSLATION TO THE SWERVE
+    swerve.drive(finalTrajectory, 0, false, false);
    }
 
    public void end() {
