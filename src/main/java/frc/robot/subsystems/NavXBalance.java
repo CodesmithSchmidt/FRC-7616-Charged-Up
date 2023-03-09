@@ -5,7 +5,8 @@ import java.util.function.BooleanSupplier;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.math.geometry.Translation2d;
-
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 //import edu.wpi.first.wpilibj.SPI;
@@ -16,19 +17,21 @@ public class NavXBalance extends SubsystemBase {
     // LOOKS LIKE IT'S ALREADY SPECIFIED SPI IN Swerve.java
     private AHRS ahrs;
     private Swerve swerve;
-    private BooleanSupplier robotCentricSup;
-    private double rotationVal;
-    private Translation2d translation;
+
+    private SwerveModuleState[] correctionSwerveModuleStates;
+    private ChassisSpeeds speed;
+    private Translation2d centerOfRotation;
     
     public NavXBalance(AHRS ahrs_in, Swerve drive_in, BooleanSupplier supplier) {
         ahrs = ahrs_in;
         swerve = drive_in;
-        robotCentricSup = supplier;
     }
     
     // THRESHOLD VALUE TO TWEAK
-    // ENDS UP GETTING MULTIPLIED BY THE VELOCITY IN THE X DIRECTION
+    // DEGREES UNTIL ROBOT PERFOMS CORRECTION
     private double threshold = 5;
+    // VALUE TO TWEAK FOR CORRECTION SPEED
+    private float multiplier = 1;
     
     @Override
     public void periodic() {
@@ -49,22 +52,19 @@ public class NavXBalance extends SubsystemBase {
     // OFF THE PLATFORM. WON'T WORK IF THE ROBOT DOESN'T GO STRAIGHT
     // ON THE PLATFORM (X AXIS FORWARD). RETURNS A CORRECTION COEFFICIENT.
     public float checkPosition() {
-        if (ahrs.isMoving()) {
-            if (ahrs.getPitch() < 0) {
-                return -1 * ahrs.getVelocityX();
-            }
-            else {
-                return ahrs.getVelocityX();
-            }
+        if (Math.abs(ahrs.getPitch()) > threshold) {
+            return ahrs.getPitch();
         }
 
         return 0;
     }
 
    // DRIVES THE MOTORS TO CORRECT
-   // BASED OFF TeleopSwerve.java
    public void correct(float severity) {
-    translation = new Translation2d(severity * threshold, 0);
-    swerve.drive(translation.times(Constants.Swerve.maxSpeed), rotationVal * Constants.Swerve.maxAngularVelocity, !robotCentricSup.getAsBoolean(),true);
+    // SPEED TO MOVE IN X DIRECTION
+    speed = new ChassisSpeeds(severity * multiplier, 0, 0);
+
+    correctionSwerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(speed, centerOfRotation);
+    swerve.setModuleStates(correctionSwerveModuleStates);
    }
 }
